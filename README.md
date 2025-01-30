@@ -128,6 +128,82 @@ alerts:
 - 🟡 Yellow: Warning level (61-85%)
 - 🔴 Red: Critical level (86-100%)
 
+## 🔧 Setting Up Aliases
+
+To make SysFlow easier to use, you can set up aliases on your system. Here's how to do it on different operating systems:
+
+### Linux
+
+1. For Bash users (edit `~/.bashrc`):
+```bash
+# Add these lines to ~/.bashrc
+alias sf='cd /path/to/SysFlow'
+alias sysflow='(cd /path/to/SysFlow && go run main.go)'
+```
+
+2. For Zsh users (edit `~/.zshrc`):
+```bash
+# Add these lines to ~/.zshrc
+alias sf='cd /path/to/SysFlow'
+alias sysflow='(cd /path/to/SysFlow && go run main.go)'
+```
+
+After adding the aliases, run:
+```bash
+source ~/.bashrc  # for Bash
+# OR
+source ~/.zshrc   # for Zsh
+```
+
+### macOS
+
+macOS uses the same approach as Linux. By default, it uses Zsh:
+
+1. Edit `~/.zshrc`:
+```bash
+# Add these lines to ~/.zshrc
+alias sf='cd /path/to/SysFlow'
+alias sysflow='(cd /path/to/SysFlow && go run main.go)'
+```
+
+2. Apply changes:
+```bash
+source ~/.zshrc
+```
+
+### Windows
+
+1. Using PowerShell (create/edit your PowerShell profile):
+```powershell
+# First, check if you have a profile:
+echo $PROFILE
+
+# If it doesn't exist, create it:
+New-Item -Path $PROFILE -Type File -Force
+
+# Add these lines to your profile:
+function Set-SysFlowLocation { Set-Location C:\path\to\SysFlow }
+Set-Alias -Name sf -Value Set-SysFlowLocation
+
+function Start-SysFlow { 
+    Push-Location C:\path\to\SysFlow
+    go run main.go
+    Pop-Location
+}
+Set-Alias -Name sysflow -Value Start-SysFlow
+```
+
+2. Apply changes:
+```powershell
+. $PROFILE
+```
+
+Note: Replace `/path/to/SysFlow` or `C:\path\to\SysFlow` with your actual SysFlow installation path.
+
+These aliases provide:
+- `sf`: Quickly navigate to the SysFlow directory
+- `sysflow`: Run SysFlow from any location
+
 ## 🤝 Contributing
 We welcome contributions! Here's how you can help:
 
