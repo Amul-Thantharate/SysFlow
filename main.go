@@ -14,6 +14,7 @@ import (
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/mem"
 	"github.com/shirou/gopsutil/net"
+	"github.com/showwin/speedtest-go/speedtest"
 )
 
 const (
@@ -191,23 +192,83 @@ func PrintUsers() {
 }
 
 func PrintOpenPorts() {
-    interfaces, err := net.Interfaces()
-    if err != nil {
-        fmt.Println("Error getting network interfaces:", err)
-        return
-    }
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		fmt.Println("Error getting network interfaces:", err)
+		return
+	}
 
-    fmt.Println(BLUE + "\nOpen Ports and IP Addresses:" + RESET)
+	fmt.Println(BLUE + "\nOpen Ports and IP Addresses:" + RESET)
 
-    for _, iface := range interfaces {
-        addrs := iface.Addrs
-        for _, addr := range addrs {
-            fmt.Printf("Interface: %s, Address: %s\n", iface.Name, addr.Addr)
-        }
-    }
+	for _, iface := range interfaces {
+		addrs := iface.Addrs
+		for _, addr := range addrs {
+			fmt.Printf("Interface: %s, Address: %s\n", iface.Name, addr.Addr)
+		}
+	}
 }
 
-func main() {
+// PrintSpeedTest performs and prints internet speed test results
+func PrintSpeedTest() {
+  fmt.Println(GREEN + "\nRunning Speed Test..." + RESET)
+
+  serverList, err := speedtest.FetchServers()
+  if err != nil {
+    fmt.Printf("Error fetching speedtest servers: %v\n", err)
+    return
+  }
+
+  // Find closest server
+  targets, err := serverList.FindServer([]int{})
+  if err != nil {
+    fmt.Printf("Error finding server: %v\n", err)
+    return
+  }
+  if len(targets) == 0 {
+    fmt.Println("No speedtest servers found!")
+    return
+  }
+
+  server := targets[0]
+
+  // Run speed test
+  err = server.PingTest(func(latency time.Duration) {
+    // Optional: Do something with each ping result
+  })
+  if err != nil {
+    fmt.Printf("Error testing ping: %v\n", err)
+    return
+  }
+
+  err = server.DownloadTest()
+  if err != nil {
+    fmt.Printf("Error testing download speed: %v\n", err)
+    return
+  }
+
+  err = server.UploadTest()
+  if err != nil {
+    fmt.Printf("Error testing upload speed: %v\n", err)
+    return
+  }
+
+  // Create table for results
+  table := tablewriter.NewWriter(os.Stdout)
+  table.SetHeader([]string{"Metric", "Value"})
+  table.SetHeaderColor(
+    tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
+    tablewriter.Colors{tablewriter.Bold, tablewriter.FgGreenColor},
+  )
+
+		table.Append([]string{"Server Location", server.String()})
+		table.Append([]string{"Ping", fmt.Sprintf("%.2f ms", float64(server.Latency.Nanoseconds()) / 1e6)})
+		table.Append([]string{"Download Speed", fmt.Sprintf("%.2f Mbps", server.DLSpeed)})
+		table.Append([]string{"Upload Speed", fmt.Sprintf("%.2f Mbps", server.ULSpeed)})
+
+		table.Render()
+		}
+
+		func main() {
 	memoryFlag := flag.Bool("memory", false, "Print memory stats")
 	diskFlag := flag.Bool("disk", false, "Print disk stats")
 	networkFlag := flag.Bool("network", false, "Print network stats")
@@ -216,6 +277,7 @@ func main() {
 	tempFlag := flag.Bool("temp", false, "Print system temperature")
 	usersFlag := flag.Bool("users", false, "Print user info")
 	openPorts := flag.Bool("ports", false, "Print all open ports")
+	speedTestFlag := flag.Bool("speedtest", false, "Run internet speed test") // Add speed test flag
 	allFlag := flag.Bool("all", false, "Print all stats")
 	flag.Parse()
 
@@ -227,6 +289,7 @@ func main() {
 		PrintCPUStats()
 		PrintUsers()
 		PrintOpenPorts()
+		PrintSpeedTest()
 	} else {
 		if *memoryFlag {
 			MemoryStatus()
@@ -249,9 +312,12 @@ func main() {
 		if *openPorts {
 			PrintOpenPorts()
 		}
+		if *speedTestFlag {
+			PrintSpeedTest()
+		}
 	}
 
-	if !*memoryFlag && !*diskFlag && !*networkFlag && !*osFlag && !*cpuFlag && !*tempFlag && !*usersFlag && !*openPorts && !*allFlag {
+	if !*memoryFlag && !*diskFlag && !*networkFlag && !*osFlag && !*cpuFlag && !*tempFlag && !*usersFlag && !*openPorts && !*speedTestFlag && !*allFlag {
 		fmt.Println("No flag specified. Use -h or --help for options.")
 	}
 }

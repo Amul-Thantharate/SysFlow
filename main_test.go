@@ -42,6 +42,10 @@ func TestPrintOpenPorts(t *testing.T) {
 	PrintOpenPorts()
 }
 
+func TestPrintSpeedTest(t *testing.T) {
+	PrintSpeedTest()
+}
+
 // TestBToGb tests the bToGb function
 func TestBToGb(t *testing.T) {
 	tests := []struct {
