@@ -8,6 +8,8 @@ A powerful cross-platform CLI tool for monitoring system resources and performan
   - Memory usage patterns
   - Disk I/O operations
   - Network throughput
+  - Os and kernel information
+  - SpeedTest for network
 - 🚀 Lightweight and fast (< 1% CPU overhead)
 - 🎨 Beautiful CLI interface with color-coded metrics
 - 📈 Historical data tracking with customizable retention
@@ -185,7 +187,7 @@ New-Item -Path $PROFILE -Type File -Force
 function Set-SysFlowLocation { Set-Location C:\path\to\SysFlow }
 Set-Alias -Name sf -Value Set-SysFlowLocation
 
-function Start-SysFlow { 
+function Start-SysFlow {
     Push-Location C:\path\to\SysFlow
     go run main.go
     Pop-Location
