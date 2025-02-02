@@ -1,36 +1,84 @@
-.PHONY: all clean build-all build-linux build-macos build-windows
+# Makefile for Go project
 
-# Binary names
-BINARY_LINUX=sysflow-linux
-BINARY_MACOS=sysflow-macos
-BINARY_WINDOWS=sysflow-windows.exe
-
-# Build directory
+# Variables
+BINARY_NAME=system-stats
+GO=go
+GOFLAGS=-ldflags="-s -w"
 BUILD_DIR=build
+PLATFORMS=windows linux darwin
+ARCHITECTURES=amd64
 
-all: clean build-all
+# Default target
+all: build
 
-build-all: build-linux build-macos build-windows
+# Build the project
+build:
+	$(GO) build $(GOFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) .
 
-build-linux:
-	@echo "Building for Linux..."
-	@mkdir -p $(BUILD_DIR)
-	@GOOS=linux GOARCH=amd64 go build -o $(BUILD_DIR)/$(BINARY_LINUX)
-	@echo "✅ Linux build complete"
+# Run the project
+run:
+	$(GO) run .
 
-build-macos:
-	@echo "Building for macOS..."
-	@mkdir -p $(BUILD_DIR)
-	@GOOS=darwin GOARCH=amd64 go build -o $(BUILD_DIR)/$(BINARY_MACOS)
-	@echo "✅ macOS build complete"
-
-build-windows:
-	@echo "Building for Windows..."
-	@mkdir -p $(BUILD_DIR)
-	@GOOS=windows GOARCH=amd64 go build -o $(BUILD_DIR)/$(BINARY_WINDOWS)
-	@echo "✅ Windows build complete"
-
+# Clean build artifacts
 clean:
-	@echo "Cleaning build directory..."
-	@rm -rf $(BUILD_DIR)
-	@echo "✅ Clean complete"
+	rm -rf $(BUILD_DIR)
+
+# Cross-compile for multiple platforms
+cross-compile:
+	@for GOOS in $(PLATFORMS); do \
+		for GOARCH in $(ARCHITECTURES); do \
+			export GOOS GOARCH; \
+			$(GO) build $(GOFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-$$GOOS-$$GOARCH .; \
+		done \
+	done
+
+# Install dependencies
+deps:
+	$(GO) mod download
+
+# Format code
+fmt:
+	$(GO) fmt ./...
+
+# Vet code
+vet:
+	$(GO) vet ./...
+
+# Test code
+test:
+	$(GO) test ./...
+
+# Lint code
+lint:
+	golint ./...
+
+# Check code quality
+check: fmt vet lint test
+
+# Install the binary
+install:
+	$(GO) install .
+
+# Uninstall the binary
+uninstall:
+	$(GO) clean -i
+
+# Help message
+help:
+	@echo "Available targets:"
+	@echo "  all           - Build the project (default)"
+	@echo "  build         - Build the project"
+	@echo "  run           - Run the project"
+	@echo "  clean         - Clean build artifacts"
+	@echo "  cross-compile - Cross-compile for multiple platforms"
+	@echo "  deps          - Install dependencies"
+	@echo "  fmt           - Format code"
+	@echo "  vet           - Vet code"
+	@echo "  test          - Test code"
+	@echo "  lint          - Lint code"
+	@echo "  check         - Check code quality (fmt, vet, lint, test)"
+	@echo "  install       - Install the binary"
+	@echo "  uninstall     - Uninstall the binary"
+	@echo "  help          - Show this help message"
+
+.PHONY: all build run clean cross-compile deps fmt vet test lint check install uninstall help
