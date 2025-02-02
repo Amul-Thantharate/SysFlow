@@ -5,19 +5,15 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
-	"regexp"
+	"os/user"
 	"runtime"
-	"strconv"
-	"strings"
 	"time"
 
-	"github.com/dustin/go-humanize"
 	"github.com/olekukonko/tablewriter"
 	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/disk"
+	"github.com/shirou/gopsutil/mem"
 	"github.com/shirou/gopsutil/net"
-	"github.com/shirou/gopsutil/v3/disk"
-	"github.com/shirou/gopsutil/v3/mem"
 )
 
 const (
@@ -33,6 +29,7 @@ func bToGb(b uint64) float64 {
 	return float64(b) / float64(1024*1024*1024)
 }
 
+// MemoryStatus prints memory usage statistics
 func MemoryStatus() {
 	m, err := mem.VirtualMemory()
 	if err != nil {
@@ -62,7 +59,8 @@ func MemoryStatus() {
 	table.Render()
 }
 
-func printDiskStats() {
+// PrintDiskStats prints disk usage statistics
+func PrintDiskStats() {
 	parts, err := disk.Partitions(true)
 	if err != nil {
 		fmt.Println("Error getting disk partitions:", err)
@@ -92,7 +90,8 @@ func printDiskStats() {
 	}
 }
 
-func printNetworkStats() {
+// PrintNetworkStats prints network interface statistics
+func PrintNetworkStats() {
 	interfaces, err := net.Interfaces()
 	if err != nil {
 		fmt.Println("Error getting network interfaces:", err)
@@ -127,7 +126,8 @@ func printNetworkStats() {
 	}
 }
 
-func printOSInfo() {
+// PrintOSInfo prints OS information
+func PrintOSInfo() {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Metric", "Value"})
 	table.SetHeaderColor(
@@ -144,7 +144,8 @@ func printOSInfo() {
 	table.Render()
 }
 
-func printCPUStats() {
+// PrintCPUStats prints CPU usage statistics
+func PrintCPUStats() {
 	percent, err := cpu.Percent(time.Second, false)
 	if err != nil {
 		fmt.Println("Error getting CPU usage:", err)
@@ -165,76 +166,28 @@ func printCPUStats() {
 	table.Render()
 }
 
-func printDiskIOStats() {
-	ioCounters, err := disk.IOCounters()
+// PrintUsers prints a list of users and their information
+func PrintUsers() {
+	users, err := user.Current()
 	if err != nil {
-		fmt.Println("Error getting disk I/O counters:", err)
+		fmt.Println("Error getting current user:", err)
 		return
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Device", "Read Count", "Write Count", "Read Bytes", "Write Bytes"})
+	table.SetHeader([]string{"Metric", "Value"})
 	table.SetHeaderColor(
 		tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
 		tablewriter.Colors{tablewriter.Bold, tablewriter.FgGreenColor},
-		tablewriter.Colors{tablewriter.Bold, tablewriter.FgYellowColor},
-		tablewriter.Colors{tablewriter.Bold, tablewriter.FgRedColor},
-		tablewriter.Colors{tablewriter.Bold, tablewriter.FgBlueColor},
 	)
-	for dev, io := range ioCounters {
-		table.Append([]string{
-			dev,
-			fmt.Sprintf("%d", io.ReadCount),
-			fmt.Sprintf("%d", io.WriteCount),
-			humanize.Bytes(io.ReadBytes),
-			humanize.Bytes(io.WriteBytes),
-		})
-	}
+	table.Append([]string{"Username", users.Username})
+	table.Append([]string{"Name", users.Name})
+	table.Append([]string{"Home Directory", users.HomeDir})
+	table.Append([]string{"User ID", users.Uid})
+	table.Append([]string{"Group ID", users.Gid})
 
-	fmt.Println(YELLOW + "\nDisk I/O Stats:" + RESET)
+	fmt.Println(CYAN + "\nUser Info:" + RESET)
 	table.Render()
-}
-
-func performNetworkSpeedTest() {
-	fmt.Println(CYAN + "\nNetwork Speed Test:" + RESET)
-
-	var cmd *exec.Cmd
-	switch runtime.GOOS {
-	case "windows":
-		cmd = exec.Command("speedtest.exe", "--simple")
-	case "darwin", "linux":
-		cmd = exec.Command("speedtest-cli", "--simple")
-	default:
-		fmt.Println("Unsupported OS for network speed test.")
-		return
-	}
-
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		fmt.Println("Error running speed test:", err)
-		fmt.Println(string(output))
-		return
-	}
-
-	outputStr := string(output)
-	re := regexp.MustCompile(`Download: (.+) Mbps\nUpload: (.+) Mbps`)
-	match := re.FindStringSubmatch(outputStr)
-
-	if len(match) == 3 {
-		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"Metric", "Value"})
-		table.SetHeaderColor(
-			tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-			tablewriter.Colors{tablewriter.Bold, tablewriter.FgGreenColor},
-		)
-		download, _ := strconv.ParseFloat(strings.TrimSpace(match[1]), 64)
-		upload, _ := strconv.ParseFloat(strings.TrimSpace(match[2]), 64)
-		table.Append([]string{"Download", fmt.Sprintf("%.2f Mbps", download)})
-		table.Append([]string{"Upload", fmt.Sprintf("%.2f Mbps", upload)})
-		table.Render()
-	} else {
-		fmt.Println("Could not parse speed test results. Output:", outputStr)
-	}
 }
 
 func main() {
@@ -243,44 +196,49 @@ func main() {
 	networkFlag := flag.Bool("network", false, "Print network stats")
 	osFlag := flag.Bool("os", false, "Print OS info")
 	cpuFlag := flag.Bool("cpu", false, "Print CPU stats")
-	ioFlag := flag.Bool("io", false, "Print disk I/O stats")
-	speedTestFlag := flag.Bool("speed", false, "Perform network speed test")
+	tempFlag := flag.Bool("temp", false, "Print system temperature")
+	usersFlag := flag.Bool("users", false, "Print user info")
 	allFlag := flag.Bool("all", false, "Print all stats")
 	flag.Parse()
 
 	if *allFlag {
 		MemoryStatus()
-		printDiskStats()
-		printNetworkStats()
-		printOSInfo()
-		printCPUStats()
-		printDiskIOStats()
-		performNetworkSpeedTest()
+		PrintDiskStats()
+		PrintNetworkStats()
+		PrintOSInfo()
+		PrintCPUStats()
+		PrintUsers()
 	} else {
 		if *memoryFlag {
 			MemoryStatus()
 		}
 		if *diskFlag {
-			printDiskStats()
+			PrintDiskStats()
 		}
 		if *networkFlag {
-			printNetworkStats()
+			PrintNetworkStats()
 		}
 		if *osFlag {
-			printOSInfo()
+			PrintOSInfo()
 		}
 		if *cpuFlag {
-			printCPUStats()
+			PrintCPUStats()
 		}
-		if *ioFlag {
-			printDiskIOStats()
-		}
-		if *speedTestFlag {
-			performNetworkSpeedTest()
+		if *usersFlag {
+			PrintUsers()
 		}
 	}
 
-	if !*memoryFlag && !*diskFlag && !*networkFlag && !*osFlag && !*cpuFlag && !*ioFlag && !*speedTestFlag && !*allFlag {
+	if !*memoryFlag && !*diskFlag && !*networkFlag && !*osFlag && !*cpuFlag && !*tempFlag && !*usersFlag && !*allFlag {
 		fmt.Println("No flag specified. Use -h or --help for options.")
 	}
+}
+// PrintDiskIOStats prints disk I/O statistics
+func PrintDiskIOStats() {
+    fmt.Println("Disk I/O Stats: Function not implemented yet.")
+}
+
+// PerformNetworkSpeedTest performs a network speed test
+func PerformNetworkSpeedTest() {
+    fmt.Println("Network Speed Test: Function not implemented yet.")
 }

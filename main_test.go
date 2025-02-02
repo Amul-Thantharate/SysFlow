@@ -13,37 +13,41 @@ func TestMemoryStatus(t *testing.T) {
 // TestPrintDiskStats tests the printDiskStats function
 func TestPrintDiskStats(t *testing.T) {
 	// This is a basic test to ensure the function runs without errors
-	printDiskStats()
+	PrintDiskStats()
 }
 
 // TestPrintNetworkStats tests the printNetworkStats function
 func TestPrintNetworkStats(t *testing.T) {
 	// This is a basic test to ensure the function runs without errors
-	printNetworkStats()
+	PrintNetworkStats()
 }
 
 // TestPrintOSInfo tests the printOSInfo function
 func TestPrintOSInfo(t *testing.T) {
 	// This is a basic test to ensure the function runs without errors
-	printOSInfo()
+	PrintOSInfo()
 }
 
 // TestPrintCPUStats tests the printCPUStats function
 func TestPrintCPUStats(t *testing.T) {
 	// This is a basic test to ensure the function runs without errors
-	printCPUStats()
+	PrintCPUStats()
 }
 
 // TestPrintDiskIOStats tests the printDiskIOStats function
 func TestPrintDiskIOStats(t *testing.T) {
 	// This is a basic test to ensure the function runs without errors
-	printDiskIOStats()
+	PrintDiskIOStats()
 }
 
 // TestPerformNetworkSpeedTest tests the performNetworkSpeedTest function
 func TestPerformNetworkSpeedTest(t *testing.T) {
 	// This is a basic test to ensure the function runs without errors
-	performNetworkSpeedTest()
+	PerformNetworkSpeedTest()
+}
+
+func TestPrintUsers(t *testing.T) {
+	PrintUsers()
 }
 
 // TestBToGb tests the bToGb function
