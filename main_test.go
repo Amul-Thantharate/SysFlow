@@ -34,20 +34,12 @@ func TestPrintCPUStats(t *testing.T) {
 	PrintCPUStats()
 }
 
-// TestPrintDiskIOStats tests the printDiskIOStats function
-func TestPrintDiskIOStats(t *testing.T) {
-	// This is a basic test to ensure the function runs without errors
-	PrintDiskIOStats()
-}
-
-// TestPerformNetworkSpeedTest tests the performNetworkSpeedTest function
-func TestPerformNetworkSpeedTest(t *testing.T) {
-	// This is a basic test to ensure the function runs without errors
-	PerformNetworkSpeedTest()
-}
-
 func TestPrintUsers(t *testing.T) {
 	PrintUsers()
+}
+
+func TestPrintOpenPorts(t *testing.T) {
+	PrintOpenPorts()
 }
 
 // TestBToGb tests the bToGb function

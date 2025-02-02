@@ -190,6 +190,23 @@ func PrintUsers() {
 	table.Render()
 }
 
+func PrintOpenPorts() {
+    interfaces, err := net.Interfaces()
+    if err != nil {
+        fmt.Println("Error getting network interfaces:", err)
+        return
+    }
+
+    fmt.Println(BLUE + "\nOpen Ports and IP Addresses:" + RESET)
+
+    for _, iface := range interfaces {
+        addrs := iface.Addrs
+        for _, addr := range addrs {
+            fmt.Printf("Interface: %s, Address: %s\n", iface.Name, addr.Addr)
+        }
+    }
+}
+
 func main() {
 	memoryFlag := flag.Bool("memory", false, "Print memory stats")
 	diskFlag := flag.Bool("disk", false, "Print disk stats")
@@ -198,6 +215,7 @@ func main() {
 	cpuFlag := flag.Bool("cpu", false, "Print CPU stats")
 	tempFlag := flag.Bool("temp", false, "Print system temperature")
 	usersFlag := flag.Bool("users", false, "Print user info")
+	openPorts := flag.Bool("ports", false, "Print all open ports")
 	allFlag := flag.Bool("all", false, "Print all stats")
 	flag.Parse()
 
@@ -208,6 +226,7 @@ func main() {
 		PrintOSInfo()
 		PrintCPUStats()
 		PrintUsers()
+		PrintOpenPorts()
 	} else {
 		if *memoryFlag {
 			MemoryStatus()
@@ -227,18 +246,12 @@ func main() {
 		if *usersFlag {
 			PrintUsers()
 		}
+		if *openPorts {
+			PrintOpenPorts()
+		}
 	}
 
-	if !*memoryFlag && !*diskFlag && !*networkFlag && !*osFlag && !*cpuFlag && !*tempFlag && !*usersFlag && !*allFlag {
+	if !*memoryFlag && !*diskFlag && !*networkFlag && !*osFlag && !*cpuFlag && !*tempFlag && !*usersFlag && !*openPorts && !*allFlag {
 		fmt.Println("No flag specified. Use -h or --help for options.")
 	}
-}
-// PrintDiskIOStats prints disk I/O statistics
-func PrintDiskIOStats() {
-    fmt.Println("Disk I/O Stats: Function not implemented yet.")
-}
-
-// PerformNetworkSpeedTest performs a network speed test
-func PerformNetworkSpeedTest() {
-    fmt.Println("Network Speed Test: Function not implemented yet.")
 }
